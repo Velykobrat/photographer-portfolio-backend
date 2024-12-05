@@ -1,0 +1,34 @@
+# Node modules
+node_modules/
+
+# Environment variables file
+.env
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.swp
+
+# TypeScript output directory
+dist/
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# npm package lock file
+package-lock.json
+yarn.lock
+
+# Other common files
+*.env.local
+*.env.development
+*.env.test
+*.env.production

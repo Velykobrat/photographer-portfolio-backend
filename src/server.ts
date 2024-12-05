@@ -1,15 +1,15 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import path from 'path';
 import pino from 'pino-http';
 import connectToDatabase from './utils/mongoDB';
 import authRoutes from './routes/authRoutes';
-import imageRoutes from './routes/imageRoutes'; // Оновлено для підключення imageRoutes
+import imageRoutes from './routes/imageRoutes';
+import errorHandler from './middleware/errorHandler'; // Переконайтесь, що шлях правильний
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware для обробки JSON
+// Проміжна програма для обробки JSON
 app.use(
   express.json(),
   pino({
@@ -19,24 +19,28 @@ app.use(
   }),
 );
 
-
-// Підключення маршрутів
-app.use('/api/auth', authRoutes);
-app.use('/api/images', imageRoutes); // Підключення маршруту для фото
+// Статичні файли для доступу до завантажених фото
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Ваші API маршрути
+app.use('/api/auth', authRoutes);
+app.use('/api/images', imageRoutes);
 
 // Підключення до бази даних та запуск сервера
 connectToDatabase().then(() => {
-  console.log('Connected to the database successfully');
+  console.log('Підключено до бази даних успішно');
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Сервер працює на http://localhost:${PORT}`);
   });
 }).catch((error) => {
-  console.error('Failed to start server:', error);
+  console.error('Не вдалося запустити сервер:', error);
 });
 
-// Простий маршрут для перевірки
+// Тестовий маршрут
 app.get('/api', (req, res) => {
-  console.log('GET /api endpoint accessed');
-  res.send('Hello from backend!');
+  console.log('Доступ до GET /api');
+  res.send('Привіт від бекенду!');
 });
+
+// Використання обробника помилок
+app.use(errorHandler);

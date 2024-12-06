@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import pino from 'pino-http';
+import cors from 'cors';
 import connectToDatabase from './utils/mongoDB';
 import authRoutes from './routes/authRoutes';
 import imageRoutes from './routes/imageRoutes';
@@ -8,6 +9,8 @@ import errorHandler from './middleware/errorHandler'; // Переконайте�
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(cors()); // Це дозволяє фронтенду доступатися до бекенду на іншому порту
 
 // Проміжна програма для обробки JSON
 app.use(
@@ -21,6 +24,8 @@ app.use(
 
 // Статичні файли для доступу до завантажених фото
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
 
 // Ваші API маршрути
 app.use('/api/auth', authRoutes);

@@ -30,6 +30,11 @@ export const addImage = async (req: Request, res: Response): Promise<void> => {
     }
 
     const userId = req.body.userId;
+    if (!userId) {
+      res.status(400).json({ message: 'UserId is required' });
+      return;
+    }
+    
     const newImage = await uploadImage(req.file, userId);
 
     res.status(201).json(newImage);
@@ -58,13 +63,12 @@ export const deleteImage = async (req: Request, res: Response): Promise<void> =>
     // Викликаємо функцію видалення
     const result = await deleteImageService(id);
 
-    // Перевірка на результат
-    if (!result) {
+    // Якщо результат порожній, це означає, що нічого не було видалено
+    if (result.message === 'Image deleted successfully') {
+      res.status(200).json({ message: 'Зображення успішно видалено' });
+    } else {
       res.status(404).json({ message: 'Зображення не знайдено' });
-      return; // Повертаємо з функції після відповіді
     }
-
-    res.status(200).json({ message: 'Зображення успішно видалено' });
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error('Error in deleteImage controller:', error.message);

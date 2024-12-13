@@ -27,7 +27,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallb
 declare global {
   namespace Express {
     interface Request {
-      fileValidationError?: string; // Додаємо власне поле в Request
+      fileValidationError?: string; 
     }
   }
 }

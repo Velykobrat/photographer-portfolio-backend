@@ -4,6 +4,10 @@
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strictFunctionTypes": true,
+    "typeRoots": ["./node_modules/@types", "/src/types"],  // Додайте шлях до вашої папки з типами
+    "types": ["node", "express"]  // Переконайтесь, що ви включили типи для express
   }
 }

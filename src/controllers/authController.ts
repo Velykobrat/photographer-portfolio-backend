@@ -67,14 +67,17 @@ export const loginUser = async (req: Request, res: Response) => {
     const token = jwt.sign({ id: user._id, email: user.email }, SECRET_KEY, {
       expiresIn: '1h', // Тривалість дії токену
     });
+    console.log('Token generated:', token);  // Лог для перевірки створеного токена
     console.log('Token created successfully');
 
-    res.status(200).json({ token });
+    // Заміна на повернення поля accessToken
+    res.status(200).json({ accessToken: token });
   } catch (error) {
     console.error('Error during user login:', error);
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
 
 // Оновлення токену (refresh)
 export const refreshUser = async (req: Request, res: Response) => {

@@ -1,81 +1,78 @@
 // controllers/imageController.ts
+
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 import Image from '../models/imageModel'; // Модель Mongoose
-import { uploadImage, deleteImage as deleteImageService, getUserImages as getUserImagesService } from '../services/imageService';
+import {
+  uploadImage as uploadImageService,
+  deleteImage as deleteImageService,
+  getAllImages as getAllImagesService,
+} from '../services/imageService';
 
-
-// Контролер для отримання зображень користувача
-export const getUserImages = async (req: Request, res: Response): Promise<void> => {
+// Контролер для отримання всіх зображень
+export const getAllImages = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Знаходження всіх зображень у колекції
-    const images = await Image.find(); // Використання моделі Mongoose для отримання даних
+    // Отримання всіх зображень із колекції
+    const images = await Image.find();
     res.status(200).json(images);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: 'An unexpected error occurred' });
-    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ message: errorMessage });
   }
 };
-
 
 // Контролер для додавання зображення
 export const addImage = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('req.file:', req.file);
+    console.log('req.fileValidationError:', req.fileValidationError);
+    console.log('req.body:', req.body); // Логування тіла запиту
+
     if (!req.file) {
       res.status(400).json({ message: 'File is required' });
       return;
     }
 
-    const userId = req.body.userId;
+    const { userId } = req.body;
     if (!userId) {
       res.status(400).json({ message: 'UserId is required' });
       return;
     }
-    
-    const newImage = await uploadImage(req.file, userId);
 
+    console.log('Calling uploadImageService...');
+    const newImage = await uploadImageService(req.file, userId);
+
+    console.log('Image uploaded successfully:', newImage);
     res.status(201).json(newImage);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: 'An unexpected error occurred' });
-    }
+  } catch (error) {
+    console.error('Error in addImage:', error); // Логування помилок
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    res.status(500).json({ message: errorMessage });
   }
 };
+
 
 // Контролер для видалення зображення
 export const deleteImage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params; // Отримуємо ID з параметрів маршруту
+    const { id } = req.params;
+    console.log('Request to delete image with ID:', id);
 
-    console.log('Received request to delete image with ID:', id);
-
-    // Перевірка на валідність ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({ message: 'Некоректний формат ID' });
-      return; // Повертаємо з функції після відповіді
+      res.status(400).json({ message: 'Invalid ID format' });
+      return;
     }
 
-    // Викликаємо функцію видалення
     const result = await deleteImageService(id);
 
-    // Якщо результат порожній, це означає, що нічого не було видалено
     if (result.message === 'Image deleted successfully') {
-      res.status(200).json({ message: 'Зображення успішно видалено' });
+      res.status(200).json({ message: 'Image deleted successfully' });
     } else {
-      res.status(404).json({ message: 'Зображення не знайдено' });
+      res.status(404).json({ message: 'Image not found' });
     }
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error('Error in deleteImage controller:', error.message);
-      res.status(500).json({ message: 'Помилка при видаленні зображення: ' + error.message });
-    } else {
-      console.error('Unexpected error in deleteImage controller');
-      res.status(500).json({ message: 'Сталася непередбачена помилка' });
-    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    console.error('Error in deleteImage controller:', errorMessage);
+    res.status(500).json({ message: `Error deleting image: ${errorMessage}` });
   }
 };

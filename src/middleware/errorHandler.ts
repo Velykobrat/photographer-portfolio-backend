@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
 const errorHandler = (err: any, req: Request, res: Response, next: NextFunction): void => {
-  console.error(err);
+  console.error('Сталася помилка:', err.message);
+  console.error('Stack trace:', err.stack);
 
   if (err instanceof SyntaxError) {
     // Тут не потрібно використовувати `return` перед `res.status().json()`

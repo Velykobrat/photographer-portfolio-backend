@@ -1,11 +1,11 @@
 // services/imageService.ts
-import cloudinary, { getPublicIdFromUrl } from '../utils/Cloudinary'; // Імпортуємо Cloudinary і допоміжну функцію
-import Image from '../models/imageModel'; // Модель для роботи з MongoDB
-import { Types } from 'mongoose'; // Для роботи з типами ObjectId
+import cloudinary, { getPublicIdFromUrl } from '../utils/Cloudinary'; // Інтеграція з Cloudinary
+import Image from '../models/imageModel'; // Модель для MongoDB
+import { Types } from 'mongoose'; // Робота з ObjectId
 import mongoose from 'mongoose'; // Для перевірки валідності ObjectId
 
-// Функція для отримання всіх зображень користувача з бази даних
-export const getUserImages = async (userId: string) => {
+// Сервіс для отримання всіх зображень користувача
+export const getAllImages = async (userId: string) => {
   try {
     const images = await Image.find({ userId });
 
@@ -15,47 +15,62 @@ export const getUserImages = async (userId: string) => {
 
     return images;
   } catch (error) {
-    throw new Error(`Error retrieving user images: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
+    throw new Error(
+      `Error retrieving user images: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+    );
   }
 };
 
-// Функція для завантаження зображення в Cloudinary та збереження інформації в базу даних
+// Сервіс для завантаження зображення в Cloudinary і базу даних
 export const uploadImage = async (file: Express.Multer.File, userId: string) => {
   try {
-    const { path } = file;
-    const result = await cloudinary.uploader.upload(path, {
+    const { path: filePath } = file;
+    console.log('File path:', filePath);
+    console.log('UserId:', userId);
+
+    // Завантаження в Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, {
       folder: 'photographer-portfolio',
       use_filename: true,
       unique_filename: false,
     });
+    console.log('Cloudinary upload result:', result);
 
+    // Створення документа зображення
     const newImage = new Image({
       userId: new Types.ObjectId(userId),
       filePath: result.secure_url,
       description: file.originalname,
     });
+    console.log('New image document:', newImage);
 
     await newImage.save();
-
+    console.log('Image saved successfully');
     return newImage;
   } catch (error) {
-    throw new Error(`Error uploading image: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
+    console.error('Error in uploadImage service:', error);
+    throw new Error(
+      `Error uploading image: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+    );
   }
 };
 
-// Функція для видалення зображення з Cloudinary та бази даних
+
+// Сервіс для видалення зображення з Cloudinary і бази даних
 export const deleteImage = async (id: string) => {
   try {
-    // Перевірка на валідність ObjectId
+    // Перевірка валідності ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error('Invalid ObjectId format');
     }
 
+    // Пошук зображення в базі даних
     const image = await Image.findById(id);
     if (!image) {
       throw new Error('Image not found');
     }
 
+    // Отримання publicId з Cloudinary URL
     const publicId = getPublicIdFromUrl(image.filePath);
     if (!publicId) {
       throw new Error('Public ID not found in the image URL');
@@ -65,7 +80,7 @@ export const deleteImage = async (id: string) => {
     const cloudinaryDeleteResult = await cloudinary.uploader.destroy(publicId);
     console.log('Cloudinary delete result:', cloudinaryDeleteResult);
 
-    // Видалення зображення з бази даних
+    // Видалення документа з бази даних
     const dbDeleteResult = await Image.deleteOne({ _id: id });
     console.log('Database delete result:', dbDeleteResult);
 
@@ -75,7 +90,9 @@ export const deleteImage = async (id: string) => {
 
     return { message: 'Image deleted successfully' };
   } catch (error) {
-    console.error('Error in deleteImageService:', error);
-    throw new Error(`Error deleting image: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
+    console.error('Error in deleteImage:', error);
+    throw new Error(
+      `Error deleting image: ${error instanceof Error ? error.message : 'An unknown error occurred'}`
+    );
   }
 };

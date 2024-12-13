@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, RequestHandler } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import User from '../models/userModel';
@@ -43,38 +43,29 @@ export const registerUser = async (req: Request, res: Response) => {
 
 
 // Логін користувача
-export const loginUser = async (req: Request, res: Response) => {
-  console.log('Login user function triggered');
-  try {
-    const { email, password } = req.body;
-    console.log('Received email:', email);
+export const loginUser: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = req.body;
 
-    // Знаходимо користувача за email
+  try {
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('User not found:', email);
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(400).json({ message: 'Invalid credentials' });
+      return; // Завершуємо виконання функції
     }
 
-    // Перевірка пароля
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log('Password mismatch');
-      return res.status(401).json({ message: 'Invalid credentials' });
+      res.status(400).json({ message: 'Invalid credentials' });
+      return;
     }
 
-    // Створення JWT токену
-    const token = jwt.sign({ id: user._id, email: user.email }, SECRET_KEY, {
-      expiresIn: '1h', // Тривалість дії токену
-    });
-    console.log('Token generated:', token);  // Лог для перевірки створеного токена
-    console.log('Token created successfully');
+    const payload = { id: user._id, email: user.email };
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
 
-    // Заміна на повернення поля accessToken
     res.status(200).json({ accessToken: token });
   } catch (error) {
-    console.error('Error during user login:', error);
-    res.status(500).json({ message: 'Server error', error });
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

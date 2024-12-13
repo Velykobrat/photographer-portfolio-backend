@@ -11,8 +11,8 @@
   "author": "Vitalii Velykobrat <bigbrother344@gmail.com>",
   "license": "ISC",
   "engines": {
-    "node": "14.x"  
-  },
+  "node": ">=21.6.1"
+},
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
